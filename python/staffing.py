@@ -1,20 +1,23 @@
-from enum import Enum
-
 """
 Module contains methods for call center staffing calculation.
 """
+
+from enum import Enum
 
 
 class TimeUnit(Enum):
     """
     Contains time units and corresponding conversion divisor to convert value to hours.
     """
+
     SEC = 3600
     MIN = 60
     HOUR = 1
 
 
-def calc_traffic_intensity(calls_per_hour: float, aht: float, aht_unit: TimeUnit = TimeUnit.SEC) -> float:
+def calc_traffic_intensity(
+    calls_per_hour: float, aht: float, aht_unit: TimeUnit = TimeUnit.SEC
+) -> float:
     """
     Calculates traffic intensity in Erlangs.
 
