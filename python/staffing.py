@@ -40,3 +40,32 @@ def calc_traffic_intensity(calls_per_hour: float, aht: float, aht_unit: TimeUnit
     2
     """
     return calls_per_hour * (aht / aht_unit.value)
+
+
+def calc_wait_probability(traffic_intensity: float, number_of_agents: int) -> float:
+    """
+    Calculates wait probability using Erlang C formula.
+
+    Method uses fast algorithm to avoid dealing with factorials, power and big numbers.
+    Result of calculations is same as for Erlang C formula.
+
+    Parameters
+    ----------
+    traffic_intensity : float
+        Traffic intensity in Erlangs. Can be calculated using method calc_traffic_intensity().
+    number_of_agents : int
+        Number of agents.
+
+    Returns
+    -------
+    float
+        Probability that there is no available agents to answer the call. can be 0-1.
+    """
+    product = 1
+    result = 0
+    for i in range(0, number_of_agents):
+        product = product * ((number_of_agents - i) / traffic_intensity)
+        result += product
+    result = result * ((number_of_agents - traffic_intensity) / number_of_agents) + 1
+    result = 1 / result
+    return result if result <= 1 else 1
