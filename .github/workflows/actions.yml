@@ -31,6 +31,7 @@ jobs:
     steps:
     - name: Static tests
       run: |
+        ls
         cd ./python
         flake8 . --statistics
         pylint . --recursive=y
