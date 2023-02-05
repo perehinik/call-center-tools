@@ -3,6 +3,7 @@ Module contains methods for call center staffing calculation.
 """
 
 from enum import Enum
+import math
 
 
 class TimeUnit(Enum):
@@ -62,7 +63,12 @@ def calc_wait_probability(traffic_intensity: float, number_of_agents: int) -> fl
     Returns
     -------
     float
-        Probability that there is no available agents to answer the call. can be 0-1.
+        Probability that there is no available agents to answer the call. Range 0-1(0%-100%).
+
+    Examples
+    --------
+    >>> calc_wait_probability(123, 132)
+    0.3211161792617074
     """
     product = 1
     result = 0
@@ -72,3 +78,42 @@ def calc_wait_probability(traffic_intensity: float, number_of_agents: int) -> fl
     result = result * ((number_of_agents - traffic_intensity) / number_of_agents) + 1
     result = 1 / result
     return result if result <= 1 else 1
+
+
+def calc_service_level(traffic_intensity: float,
+                       number_of_agents: int,
+                       wait_probability: float,
+                       target_answer_time: float,
+                       aht: float) -> float:
+    """
+    Calculates how many calls will be answered in target time.
+
+    Parameters
+    ----------
+    traffic_intensity : float
+        Traffic intensity in Erlangs. Can be calculated using method calc_traffic_intensity().
+    number_of_agents : int
+        Number of agents.
+    wait_probability : float
+        Probability that there is no available agents to answer the call. Should be 0-1.
+    target_answer_time : float
+        Target time of answer to incoming call. Should have same unit as aht.
+    aht : float
+        Average Handling Time. Should have same unit as target_answer_time.
+
+    Returns
+    -------
+    float
+         Service level - amount of calls answered in target time. Range 0-1(0%-100%).
+
+    Examples
+    --------
+    >>> calc_service_level(123, 130, 0.4244, 20, 300)
+    0.733863392210115
+    """
+    expon = -abs((number_of_agents - traffic_intensity) * target_answer_time / aht)
+    sl = 1 - abs(wait_probability * pow(math.e, expon))
+    return sl if sl >= 0 else 0
+
+
+

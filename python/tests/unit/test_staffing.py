@@ -3,7 +3,7 @@ Unit tests for staffing.py module.
 """
 import pytest
 
-from staffing import TimeUnit, calc_traffic_intensity, calc_wait_probability
+from staffing import TimeUnit, calc_traffic_intensity, calc_wait_probability, calc_service_level
 
 
 @pytest.mark.parametrize(
@@ -25,3 +25,9 @@ def test_calc_traffic_intensity_no_unit():
 def test_calc_wait_probability(traffic_intensity, number_of_agents, expected):
     wait_probability = calc_wait_probability(traffic_intensity, number_of_agents)
     assert round(wait_probability, 4) == expected
+
+
+def test_calc_service_level():
+    assert round(calc_service_level(123, 130, 0.4244, 20, 300), 4) == 0.7339
+    assert round(calc_service_level(123, 130, 1, 0, 300), 4) == 0
+    assert round(calc_service_level(123, 130, 0, 1, 300), 4) == 1
