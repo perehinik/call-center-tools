@@ -2,8 +2,8 @@
 Module contains methods for call center staffing calculation.
 """
 
-from enum import Enum
 import math
+from enum import Enum
 
 
 class TimeUnit(Enum):
@@ -80,11 +80,13 @@ def calc_wait_probability(traffic_intensity: float, number_of_agents: int) -> fl
     return result if result <= 1 else 1
 
 
-def calc_service_level(traffic_intensity: float,
-                       number_of_agents: int,
-                       wait_probability: float,
-                       target_answer_time: float,
-                       aht: float) -> float:
+def calc_service_level(
+    traffic_intensity: float,
+    number_of_agents: int,
+    wait_probability: float,
+    target_answer_time: float,
+    aht: float,
+) -> float:
     """
     Calculates how many calls will be answered in target time.
 

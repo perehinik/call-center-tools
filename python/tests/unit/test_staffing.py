@@ -3,7 +3,13 @@ Unit tests for staffing.py module.
 """
 import pytest
 
-from staffing import TimeUnit, calc_traffic_intensity, calc_wait_probability, calc_service_level, calc_occupancy
+from staffing import (
+    TimeUnit,
+    calc_occupancy,
+    calc_service_level,
+    calc_traffic_intensity,
+    calc_wait_probability,
+)
 
 
 @pytest.mark.parametrize(
