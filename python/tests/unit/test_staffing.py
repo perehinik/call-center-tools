@@ -3,7 +3,7 @@ Unit tests for staffing.py module.
 """
 import pytest
 
-from staffing import TimeUnit, calc_traffic_intensity, calc_wait_probability, calc_service_level
+from staffing import TimeUnit, calc_traffic_intensity, calc_wait_probability, calc_service_level, calc_occupancy
 
 
 @pytest.mark.parametrize(
@@ -31,3 +31,7 @@ def test_calc_service_level():
     assert round(calc_service_level(123, 130, 0.4244, 20, 300), 4) == 0.7339
     assert round(calc_service_level(123, 130, 1, 0, 300), 4) == 0
     assert round(calc_service_level(123, 130, 0, 1, 300), 4) == 1
+
+
+def test_occupancy():
+    assert round(calc_occupancy(123, 130), 3) == 0.946

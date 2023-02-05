@@ -112,8 +112,24 @@ def calc_service_level(traffic_intensity: float,
     0.733863392210115
     """
     expon = -abs((number_of_agents - traffic_intensity) * target_answer_time / aht)
-    sl = 1 - abs(wait_probability * pow(math.e, expon))
-    return sl if sl >= 0 else 0
+    return 1 - abs(wait_probability * pow(math.e, expon))
 
 
+def calc_occupancy(traffic_intensity: float, number_of_agents: int) -> float:
+    """
+    Calculate how much time agents spend talking with customers.
 
+    Parameters
+    ----------
+    traffic_intensity : float
+        Traffic intensity in Erlangs. Can be calculated using method calc_traffic_intensity().
+    number_of_agents : int
+        Number of agents.
+
+    Returns
+    -------
+    float
+        Occupancy. Range 0-1(0%-100%).
+    """
+    occ = traffic_intensity / number_of_agents
+    return occ if occ <= 1 else 1
