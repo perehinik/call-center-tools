@@ -5,10 +5,14 @@ import pytest
 
 from staffing import (
     TimeUnit,
+    add_shrinkage,
+    calc_average_speed_of_answer,
+    calc_immediate_answer,
     calc_occupancy,
     calc_service_level,
     calc_traffic_intensity,
     calc_wait_probability,
+    optimise_occupancy,
 )
 
 
@@ -33,6 +37,10 @@ def test_calc_wait_probability(traffic_intensity, number_of_agents, expected):
     assert round(wait_probability, 4) == expected
 
 
+def test_calc_immediate_answer():
+    assert calc_immediate_answer(0.321) == 0.679
+
+
 def test_calc_service_level():
     assert round(calc_service_level(123, 130, 0.4244, 20, 300), 4) == 0.7339
     assert round(calc_service_level(123, 130, 1, 0, 300), 4) == 0
@@ -41,3 +49,22 @@ def test_calc_service_level():
 
 def test_occupancy():
     assert round(calc_occupancy(123, 130), 3) == 0.946
+
+
+def test_optimise_occupancy():
+    agents, occ = optimise_occupancy(123, 130, 0.85)
+    assert agents == 145
+    assert round(occ, 4) == 0.8483
+
+    agents, occ = optimise_occupancy(109, 130, 0.85)
+    assert agents == 130
+    assert round(occ, 4) == 0.8385
+
+
+def test_calc_average_speed_of_answer():
+    assert round(calc_average_speed_of_answer(123, 130, 0.4244, 300), 2) == 18.19
+
+
+def test_add_shrinkage():
+    assert add_shrinkage(10, 0.3) == 15
+    assert add_shrinkage(11, 0.3) == 16

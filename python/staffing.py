@@ -4,6 +4,7 @@ Module contains methods for call center staffing calculation.
 
 import math
 from enum import Enum
+from typing import Tuple
 
 
 class TimeUnit(Enum):
@@ -80,6 +81,28 @@ def calc_wait_probability(traffic_intensity: float, number_of_agents: int) -> fl
     return result if result <= 1 else 1
 
 
+def calc_immediate_answer(wait_probability: float) -> float:
+    """
+    Calculates amount of calls answered immediately.
+
+    Parameters
+    ----------
+    wait_probability : float
+        Probability that there is no available agents to answer the call. Should be 0-1.
+
+    Returns
+    -------
+    float
+        Amount of calls answered immediately. Range 0-1(0%-100%).
+
+    Examples
+    --------
+    >>> calc_immediate_answer(0.321)
+    0.679
+    """
+    return 1 - wait_probability
+
+
 def calc_service_level(
     traffic_intensity: float,
     number_of_agents: int,
@@ -132,6 +155,98 @@ def calc_occupancy(traffic_intensity: float, number_of_agents: int) -> float:
     -------
     float
         Occupancy. Range 0-1(0%-100%).
+
+    Examples
+    --------
+    >>> calc_occupancy(123, 130)
+    0.9461538461538461
     """
     occ = traffic_intensity / number_of_agents
     return occ if occ <= 1 else 1
+
+
+def optimise_occupancy(
+    traffic_intensity: float, number_of_agents: int, occupancy_target: float
+) -> Tuple[int, float]:
+    """
+    Calculate number of agents to meet occupancy target.
+
+    Parameters
+    ----------
+    traffic_intensity : float
+        Traffic intensity in Erlangs. Can be calculated using method calc_traffic_intensity().
+    number_of_agents : int
+        Number of agents.
+    occupancy_target : float
+        The highest allowed occupancy. Should be 0-1.
+
+    Returns
+    -------
+    Tuple [int, float]
+        (Number of agents, optimised occupancy)
+
+    Examples
+    --------
+    >>> optimise_occupancy(123, 130, 0.85)
+
+    """
+    occ = calc_occupancy(traffic_intensity, number_of_agents)
+    if occ <= occupancy_target:
+        return number_of_agents, occ
+    optimised_occ_agents = math.ceil(traffic_intensity / occupancy_target)
+    occ = calc_occupancy(traffic_intensity, optimised_occ_agents)
+    return optimised_occ_agents, occ
+
+
+def calc_average_speed_of_answer(
+    traffic_intensity: float, number_of_agents: int, wait_probability: float, aht: float
+) -> float:
+    """
+    Calculates average time in which call is answered.
+
+    Parameters
+    ----------
+    traffic_intensity : float
+        Traffic intensity in Erlangs. Can be calculated using method calc_traffic_intensity().
+    number_of_agents : int
+        Number of agents.
+    wait_probability : float
+        Probability that there is no available agents to answer the call. Should be 0-1.
+    aht : float
+        Average Handling Time.
+
+    Returns
+    -------
+    float
+        Average time in which call is answered. Unit is the same as for AHT.
+
+    Examples
+    --------
+    >>> calc_average_speed_of_answer(123, 130, 0.4244, 300)
+    0.9461538461538461
+    """
+    return (wait_probability * aht) / (number_of_agents - traffic_intensity)
+
+
+def add_shrinkage(number_of_agents: int, shrinkage: float) -> int:
+    """
+    Calculates amount of agents with shrinkage applied.
+
+    Parameters
+    ----------
+    number_of_agents : int
+        Number of agents.
+    shrinkage : float
+        Percentage of time when agents are not answering calls. Should be 0-1.
+
+    Returns
+    -------
+    int
+        Number of agents with applied shrinkage.
+
+    Exapmles
+    --------
+    >>> add_shrinkage(10, 0.3)
+    15
+    """
+    return math.ceil(number_of_agents / (1 - shrinkage))
