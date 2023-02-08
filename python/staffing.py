@@ -4,7 +4,8 @@ Module contains methods for call center staffing calculation.
 
 import math
 from enum import Enum
-from typing import Tuple
+from typing import Tuple, Dict, Optional
+from dataclasses import dataclass
 
 
 class TimeUnit(Enum):
@@ -188,7 +189,7 @@ def optimise_occupancy(
     Examples
     --------
     >>> optimise_occupancy(123, 130, 0.85)
-
+    (145, 0.8482758620689655)
     """
     occ = calc_occupancy(traffic_intensity, number_of_agents)
     if occ <= occupancy_target:
@@ -250,3 +251,124 @@ def add_shrinkage(number_of_agents: int, shrinkage: float) -> int:
     15
     """
     return math.ceil(number_of_agents / (1 - shrinkage))
+
+
+@dataclass
+class StaffingData:
+    traffic_intensity: float
+    wait_probability: float
+    immediate_answer: float
+    average_speed_of_answer: float
+    occupancy: float
+    agents: int
+    agents_with_shrinkage: int
+
+
+def __find_min_max_agents(
+    number_of_agents: int,
+    calls_per_hour: float,
+    aht: float,
+    target_answer_time: float,
+    aht_unit: TimeUnit = TimeUnit.SEC
+) -> Tuple[int, Dict[StaffingData]]:
+    """
+    Find min and max number of agents for binary search.
+
+    Parameters
+    ----------
+    number_of_agents : int
+        Number of agents.
+    calls_per_hour : float
+        Number of calls offered per hour.
+    aht : float
+        Average Handling Time. Default unit is seconds.
+    target_answer_time : float
+        Target time of answer to incoming call. Should have same unit as aht.
+    aht_unit : TimeUnit, default = TimeUnit.SEC
+        Unit for average handling time.
+
+    Returns
+    -------
+    Tuple[int, int, Dict[int, StaffingData]]
+        Tuple of max number of agents and dictionary with calculated data.
+    """
+    pass
+
+
+def __calc_all(
+    number_of_agents: int,
+    calls_per_hour: float,
+    aht: float,
+    target_answer_time: float,
+    shrinkage: Optional[float] = None,
+    aht_unit: TimeUnit = TimeUnit.SEC
+) -> StaffingData:
+    """
+    Calculate all parameters for specified number of agents.
+
+    Parameters
+    ----------
+    number_of_agents : int
+        Number of agents.
+    calls_per_hour : float
+        Number of calls offered per hour.
+    aht : float
+        Average Handling Time. Default unit is seconds.
+    target_answer_time : float
+        Target time of answer to incoming call. Should have same unit as aht.
+    shrinkage : float, optional
+        Percentage of time agents are paid for but don't answer for calls.
+        For example meetings, trainings, etc.. Should be 0-1 (0-100%).
+    aht_unit : TimeUnit, default = TimeUnit.SEC
+        Unit for average handling time.
+
+    Returns
+    -------
+    StaffingData
+        Result of calculations for specified number of agents.
+    """
+    pass
+
+
+def calc_staffing(
+    calls_per_hour: float,
+    aht: float,
+    number_of_agents: Optional[int] = None,
+    target_occupancy: Optional[float] = None,
+    target_answer_time: float = 20,
+    target_service_level: float = 0.80,
+    shrinkage: Optional[float] = None,
+    time_unit: TimeUnit = TimeUnit.SEC
+) -> StaffingData:
+    """
+    Automatic staffing calculations.
+
+    If agents number specified - calculates only for this number of agents.
+    else - automatic adjusting of number of agents to achieve the best parameters.
+
+    Parameters
+    ----------
+    calls_per_hour : float
+        Number of calls offered per hour.
+    aht : float
+        Average Handling Time. Default unit is seconds.
+    number_of_agents : int, optional.
+        Number of agents. If not specified
+    target_occupancy : float, optional
+        If specified - algorithm may increase required number of agents to achieve lower occupancy.
+    target_answer_time : float, default 20
+        Target time of answer to incoming call. Should have same time unit as aht.
+    target_service_level : float, default 0.80 (80%).
+        Percentage of calls that should be answered in target_answer_time.
+    shrinkage : float, optional
+        Percentage of time agents are paid for but don't answer for calls.
+        For example meetings, trainings, etc.. Should be 0-1 (0-100%).
+    time_unit : TimeUnit, default = TimeUnit.SEC
+        Unit for average handling time and target_answer_time.
+
+    Returns
+    -------
+    StaffingData
+        Result of calculations.
+    """
+    pass
