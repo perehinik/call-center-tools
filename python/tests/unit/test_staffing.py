@@ -13,6 +13,7 @@ from staffing import (
     calc_traffic_intensity,
     calc_wait_probability,
     optimise_occupancy,
+    __find_min_max_agents
 )
 
 
@@ -68,3 +69,7 @@ def test_calc_average_speed_of_answer():
 def test_add_shrinkage():
     assert add_shrinkage(10, 0.3) == 15
     assert add_shrinkage(11, 0.3) == 16
+
+
+def test___find_min_max_agents():
+    assert __find_min_max_agents(100, 300, 20, 0.8) == (8, 16)

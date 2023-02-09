@@ -121,7 +121,7 @@ def calc_service_level(
     number_of_agents : int
         Number of agents.
     wait_probability : float
-        Probability that there is no available agents to answer the call. Should be 0-1.
+        Probability that there are no available agents to answer the call. Should be 0-1.
     target_answer_time : float
         Target time of answer to incoming call. Should have same unit as aht.
     aht : float
@@ -137,6 +137,8 @@ def calc_service_level(
     >>> calc_service_level(123, 130, 0.4244, 20, 300)
     0.733863392210115
     """
+    if number_of_agents <= traffic_intensity:
+        return 0
     expon = -abs((number_of_agents - traffic_intensity) * target_answer_time / aht)
     return 1 - abs(wait_probability * pow(math.e, expon))
 
@@ -265,34 +267,45 @@ class StaffingData:
 
 
 def __find_min_max_agents(
-    number_of_agents: int,
     calls_per_hour: float,
     aht: float,
     target_answer_time: float,
-    aht_unit: TimeUnit = TimeUnit.SEC
-) -> Tuple[int, Dict[StaffingData]]:
+    target_service_level: float,
+    time_unit: TimeUnit = TimeUnit.SEC
+) -> Tuple[int, int]:
     """
     Find min and max number of agents for binary search.
 
     Parameters
     ----------
-    number_of_agents : int
-        Number of agents.
     calls_per_hour : float
         Number of calls offered per hour.
     aht : float
         Average Handling Time. Default unit is seconds.
     target_answer_time : float
         Target time of answer to incoming call. Should have same unit as aht.
-    aht_unit : TimeUnit, default = TimeUnit.SEC
-        Unit for average handling time.
+    target_service_level : float
+        Percentage of calls that should be answered in target_answer_time.
+    time_unit : TimeUnit, default = TimeUnit.SEC
+        Unit for average handling time and target_answer_time.
 
     Returns
     -------
-    Tuple[int, int, Dict[int, StaffingData]]
-        Tuple of max number of agents and dictionary with calculated data.
+    Tuple[int, int]
+        Tuple of min and max number of agents.
     """
-    pass
+    traffic_intensity = calc_traffic_intensity(calls_per_hour, aht, time_unit)
+    for i in range(int(math.log(traffic_intensity, 2)), 65):
+        agents_num = 2**i
+        wait_probability = calc_wait_probability(traffic_intensity, agents_num)
+        service_level = calc_service_level(traffic_intensity,
+                                           agents_num,
+                                           wait_probability,
+                                           target_answer_time,
+                                           aht)
+        if service_level > target_service_level:
+            return 2**(i-1) if i > 0 else 0, agents_num
+    return 0, 0
 
 
 def __calc_all(
