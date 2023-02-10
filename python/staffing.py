@@ -19,7 +19,7 @@ class TimeUnit(Enum):
 
 
 def calc_traffic_intensity(
-    calls_per_hour: float, aht: float, aht_unit: TimeUnit = TimeUnit.SEC
+        calls_per_hour: float, aht: float, aht_unit: TimeUnit = TimeUnit.SEC
 ) -> float:
     """
     Calculates traffic intensity in Erlangs.
@@ -105,11 +105,11 @@ def calc_immediate_answer(wait_probability: float) -> float:
 
 
 def calc_service_level(
-    traffic_intensity: float,
-    number_of_agents: int,
-    wait_probability: float,
-    target_answer_time: float,
-    aht: float,
+        traffic_intensity: float,
+        number_of_agents: int,
+        wait_probability: float,
+        target_answer_time: float,
+        aht: float,
 ) -> float:
     """
     Calculates how many calls will be answered in target time.
@@ -169,7 +169,7 @@ def calc_occupancy(traffic_intensity: float, number_of_agents: int) -> float:
 
 
 def optimise_occupancy(
-    traffic_intensity: float, number_of_agents: int, occupancy_target: float
+        traffic_intensity: float, number_of_agents: int, occupancy_target: float
 ) -> Tuple[int, float]:
     """
     Calculate number of agents to meet occupancy target.
@@ -202,7 +202,7 @@ def optimise_occupancy(
 
 
 def calc_average_speed_of_answer(
-    traffic_intensity: float, number_of_agents: int, wait_probability: float, aht: float
+        traffic_intensity: float, number_of_agents: int, wait_probability: float, aht: float
 ) -> float:
     """
     Calculates average time in which call is answered.
@@ -260,6 +260,7 @@ class StaffingData:
     traffic_intensity: float
     wait_probability: float
     immediate_answer: float
+    service_level: float
     average_speed_of_answer: float
     occupancy: float
     agents: int
@@ -267,11 +268,11 @@ class StaffingData:
 
 
 def __find_min_max_agents(
-    calls_per_hour: float,
-    aht: float,
-    target_answer_time: float,
-    target_service_level: float,
-    time_unit: TimeUnit = TimeUnit.SEC
+        calls_per_hour: float,
+        aht: float,
+        target_answer_time: float,
+        target_service_level: float,
+        time_unit: TimeUnit = TimeUnit.SEC
 ) -> Tuple[int, int]:
     """
     Find min and max number of agents for binary search.
@@ -296,25 +297,26 @@ def __find_min_max_agents(
     """
     traffic_intensity = calc_traffic_intensity(calls_per_hour, aht, time_unit)
     for i in range(int(math.log(traffic_intensity, 2)), 65):
-        agents_num = 2**i
-        wait_probability = calc_wait_probability(traffic_intensity, agents_num)
+        number_of_agents = 2 ** i
+        wait_probability = calc_wait_probability(traffic_intensity, number_of_agents)
         service_level = calc_service_level(traffic_intensity,
-                                           agents_num,
+                                           number_of_agents,
                                            wait_probability,
                                            target_answer_time,
                                            aht)
+
         if service_level > target_service_level:
-            return 2**(i-1) if i > 0 else 0, agents_num
+            return 2 ** (i - 1) if i > 0 else 0, number_of_agents
     return 0, 0
 
 
 def __calc_all(
-    number_of_agents: int,
-    calls_per_hour: float,
-    aht: float,
-    target_answer_time: float,
-    shrinkage: Optional[float] = None,
-    aht_unit: TimeUnit = TimeUnit.SEC
+        number_of_agents: int,
+        calls_per_hour: float,
+        aht: float,
+        target_answer_time: float,
+        shrinkage: Optional[float] = None,
+        time_unit: TimeUnit = TimeUnit.SEC
 ) -> StaffingData:
     """
     Calculate all parameters for specified number of agents.
@@ -332,26 +334,50 @@ def __calc_all(
     shrinkage : float, optional
         Percentage of time agents are paid for but don't answer for calls.
         For example meetings, trainings, etc.. Should be 0-1 (0-100%).
-    aht_unit : TimeUnit, default = TimeUnit.SEC
-        Unit for average handling time.
+    time_unit : TimeUnit, default = TimeUnit.SEC
+        Unit for average handling time and target_answer_time.
 
     Returns
     -------
     StaffingData
         Result of calculations for specified number of agents.
     """
-    pass
+    traffic_intensity = calc_traffic_intensity(calls_per_hour, aht, time_unit)
+    wait_probability = calc_wait_probability(traffic_intensity, number_of_agents)
+    immediate_answer = calc_immediate_answer(wait_probability)
+    asa = calc_average_speed_of_answer(traffic_intensity,
+                                       number_of_agents,
+                                       wait_probability,
+                                       aht)
+    service_level = calc_service_level(traffic_intensity,
+                                       number_of_agents,
+                                       wait_probability,
+                                       target_answer_time,
+                                       aht)
+    occupancy = calc_occupancy(traffic_intensity, number_of_agents)
+    agents_with_shrinkage = add_shrinkage(number_of_agents, shrinkage)
+
+    return StaffingData(
+        traffic_intensity=traffic_intensity,
+        wait_probability=wait_probability,
+        immediate_answer=immediate_answer,
+        average_speed_of_answer=asa,
+        service_level=service_level,
+        occupancy=occupancy,
+        agents=number_of_agents,
+        agents_with_shrinkage=agents_with_shrinkage
+    )
 
 
 def calc_staffing(
-    calls_per_hour: float,
-    aht: float,
-    number_of_agents: Optional[int] = None,
-    target_occupancy: Optional[float] = None,
-    target_answer_time: float = 20,
-    target_service_level: float = 0.80,
-    shrinkage: Optional[float] = None,
-    time_unit: TimeUnit = TimeUnit.SEC
+        calls_per_hour: float,
+        aht: float,
+        number_of_agents: Optional[int] = None,
+        target_occupancy: Optional[float] = None,
+        target_answer_time: float = 20,
+        target_service_level: float = 0.80,
+        shrinkage: Optional[float] = None,
+        time_unit: TimeUnit = TimeUnit.SEC
 ) -> StaffingData:
     """
     Automatic staffing calculations.
