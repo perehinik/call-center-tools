@@ -6,7 +6,7 @@ import math
 from enum import Enum
 from typing import Tuple, Optional
 from dataclasses import dataclass
-from erlang import calc_wait_probability
+from erlang import erlang_c
 
 
 class TimeUnit(Enum):
@@ -270,7 +270,7 @@ def __find_min_max_agents(
     t_intensity = calc_traffic_intensity(calls_per_hour, aht, time_unit)
     for i in range(int(math.log(t_intensity, 2)), 65):
         agents = 2 ** i
-        wait_probability = calc_wait_probability(t_intensity, agents)
+        wait_probability = erlang_c(t_intensity, agents)
         service_level = calc_service_level(t_intensity,
                                            agents,
                                            wait_probability,
@@ -315,7 +315,7 @@ def __calc_all(
         Result of calculations for specified number of agents.
     """
     t_intensity = calc_traffic_intensity(calls_per_hour, aht, time_unit)
-    wait_probability = calc_wait_probability(t_intensity, agents)
+    wait_probability = erlang_c(t_intensity, agents)
     immediate_answer = calc_immediate_answer(wait_probability)
     asa = calc_average_speed_of_answer(t_intensity,
                                        agents,
