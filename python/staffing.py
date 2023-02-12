@@ -4,8 +4,9 @@ Module contains methods for call center staffing calculation.
 
 import math
 from enum import Enum
-from typing import Tuple, Dict, Optional
+from typing import Tuple, Optional
 from dataclasses import dataclass
+from erlang import calc_wait_probability
 
 
 class TimeUnit(Enum):
@@ -48,40 +49,6 @@ def calc_traffic_intensity(
     return calls_per_hour * (aht / aht_unit.value)
 
 
-def calc_wait_probability(traffic_intensity: float, number_of_agents: int) -> float:
-    """
-    Calculates wait probability using Erlang C formula.
-
-    Method uses fast algorithm to avoid dealing with factorials, power and big numbers.
-    Result of calculations is same as for Erlang C formula.
-
-    Parameters
-    ----------
-    traffic_intensity : float
-        Traffic intensity in Erlangs. Can be calculated using method calc_traffic_intensity().
-    number_of_agents : int
-        Number of agents.
-
-    Returns
-    -------
-    float
-        Probability that there is no available agents to answer the call. Range 0-1(0%-100%).
-
-    Examples
-    --------
-    >>> calc_wait_probability(123, 132)
-    0.3211161792617074
-    """
-    product = 1
-    result = 0
-    for i in range(0, number_of_agents):
-        product = product * ((number_of_agents - i) / traffic_intensity)
-        result += product
-    result = result * ((number_of_agents - traffic_intensity) / number_of_agents) + 1
-    result = 1 / result
-    return result if result <= 1 else 1
-
-
 def calc_immediate_answer(wait_probability: float) -> float:
     """
     Calculates amount of calls answered immediately.
@@ -105,8 +72,8 @@ def calc_immediate_answer(wait_probability: float) -> float:
 
 
 def calc_service_level(
-        traffic_intensity: float,
-        number_of_agents: int,
+        t_intensity: float,
+        agents: int,
         wait_probability: float,
         target_answer_time: float,
         aht: float,
@@ -116,9 +83,9 @@ def calc_service_level(
 
     Parameters
     ----------
-    traffic_intensity : float
+    t_intensity : float
         Traffic intensity in Erlangs. Can be calculated using method calc_traffic_intensity().
-    number_of_agents : int
+    agents : int
         Number of agents.
     wait_probability : float
         Probability that there are no available agents to answer the call. Should be 0-1.
@@ -137,21 +104,21 @@ def calc_service_level(
     >>> calc_service_level(123, 130, 0.4244, 20, 300)
     0.733863392210115
     """
-    if number_of_agents <= traffic_intensity:
+    if agents <= t_intensity:
         return 0
-    expon = -abs((number_of_agents - traffic_intensity) * target_answer_time / aht)
+    expon = -abs((agents - t_intensity) * target_answer_time / aht)
     return 1 - abs(wait_probability * pow(math.e, expon))
 
 
-def calc_occupancy(traffic_intensity: float, number_of_agents: int) -> float:
+def calc_occupancy(t_intensity: float, agents: int) -> float:
     """
     Calculate how much time agents spend talking with customers.
 
     Parameters
     ----------
-    traffic_intensity : float
+    t_intensity : float
         Traffic intensity in Erlangs. Can be calculated using method calc_traffic_intensity().
-    number_of_agents : int
+    agents : int
         Number of agents.
 
     Returns
@@ -164,21 +131,21 @@ def calc_occupancy(traffic_intensity: float, number_of_agents: int) -> float:
     >>> calc_occupancy(123, 130)
     0.9461538461538461
     """
-    occ = traffic_intensity / number_of_agents
+    occ = t_intensity / agents
     return occ if occ <= 1 else 1
 
 
 def optimise_occupancy(
-        traffic_intensity: float, number_of_agents: int, occupancy_target: float
+        t_intensity: float, agents: int, occupancy_target: float
 ) -> Tuple[int, float]:
     """
     Calculate number of agents to meet occupancy target.
 
     Parameters
     ----------
-    traffic_intensity : float
+    t_intensity : float
         Traffic intensity in Erlangs. Can be calculated using method calc_traffic_intensity().
-    number_of_agents : int
+    agents : int
         Number of agents.
     occupancy_target : float
         The highest allowed occupancy. Should be 0-1.
@@ -193,25 +160,25 @@ def optimise_occupancy(
     >>> optimise_occupancy(123, 130, 0.85)
     (145, 0.8482758620689655)
     """
-    occ = calc_occupancy(traffic_intensity, number_of_agents)
+    occ = calc_occupancy(t_intensity, agents)
     if occ <= occupancy_target:
-        return number_of_agents, occ
-    optimised_occ_agents = math.ceil(traffic_intensity / occupancy_target)
-    occ = calc_occupancy(traffic_intensity, optimised_occ_agents)
+        return agents, occ
+    optimised_occ_agents = math.ceil(t_intensity / occupancy_target)
+    occ = calc_occupancy(t_intensity, optimised_occ_agents)
     return optimised_occ_agents, occ
 
 
 def calc_average_speed_of_answer(
-        traffic_intensity: float, number_of_agents: int, wait_probability: float, aht: float
+        t_intensity: float, agents: int, wait_probability: float, aht: float
 ) -> float:
     """
     Calculates average time in which call is answered.
 
     Parameters
     ----------
-    traffic_intensity : float
+    t_intensity : float
         Traffic intensity in Erlangs. Can be calculated using method calc_traffic_intensity().
-    number_of_agents : int
+    agents : int
         Number of agents.
     wait_probability : float
         Probability that there is no available agents to answer the call. Should be 0-1.
@@ -228,16 +195,16 @@ def calc_average_speed_of_answer(
     >>> calc_average_speed_of_answer(123, 130, 0.4244, 300)
     0.9461538461538461
     """
-    return (wait_probability * aht) / (number_of_agents - traffic_intensity)
+    return (wait_probability * aht) / (agents - t_intensity)
 
 
-def add_shrinkage(number_of_agents: int, shrinkage: float) -> int:
+def add_shrinkage(agents: int, shrinkage: float) -> int:
     """
     Calculates amount of agents with shrinkage applied.
 
     Parameters
     ----------
-    number_of_agents : int
+    agents : int
         Number of agents.
     shrinkage : float
         Percentage of time when agents are not answering calls. Should be 0-1.
@@ -252,7 +219,7 @@ def add_shrinkage(number_of_agents: int, shrinkage: float) -> int:
     >>> add_shrinkage(10, 0.3)
     15
     """
-    return math.ceil(number_of_agents / (1 - shrinkage))
+    return math.ceil(agents / (1 - shrinkage))
 
 
 @dataclass
@@ -294,24 +261,29 @@ def __find_min_max_agents(
     -------
     Tuple[int, int]
         Tuple of min and max number of agents.
+
+    Examples
+    --------
+    >>> __find_min_max_agents(100, 300, 20, 0.8)
+    (8, 16)
     """
-    traffic_intensity = calc_traffic_intensity(calls_per_hour, aht, time_unit)
-    for i in range(int(math.log(traffic_intensity, 2)), 65):
-        number_of_agents = 2 ** i
-        wait_probability = calc_wait_probability(traffic_intensity, number_of_agents)
-        service_level = calc_service_level(traffic_intensity,
-                                           number_of_agents,
+    t_intensity = calc_traffic_intensity(calls_per_hour, aht, time_unit)
+    for i in range(int(math.log(t_intensity, 2)), 65):
+        agents = 2 ** i
+        wait_probability = calc_wait_probability(t_intensity, agents)
+        service_level = calc_service_level(t_intensity,
+                                           agents,
                                            wait_probability,
                                            target_answer_time,
                                            aht)
 
         if service_level > target_service_level:
-            return 2 ** (i - 1) if i > 0 else 0, number_of_agents
+            return 2 ** (i - 1) if i > 0 else 0, agents
     return 0, 0
 
 
 def __calc_all(
-        number_of_agents: int,
+        agents: int,
         calls_per_hour: float,
         aht: float,
         target_answer_time: float,
@@ -323,7 +295,7 @@ def __calc_all(
 
     Parameters
     ----------
-    number_of_agents : int
+    agents : int
         Number of agents.
     calls_per_hour : float
         Number of calls offered per hour.
@@ -342,29 +314,29 @@ def __calc_all(
     StaffingData
         Result of calculations for specified number of agents.
     """
-    traffic_intensity = calc_traffic_intensity(calls_per_hour, aht, time_unit)
-    wait_probability = calc_wait_probability(traffic_intensity, number_of_agents)
+    t_intensity = calc_traffic_intensity(calls_per_hour, aht, time_unit)
+    wait_probability = calc_wait_probability(t_intensity, agents)
     immediate_answer = calc_immediate_answer(wait_probability)
-    asa = calc_average_speed_of_answer(traffic_intensity,
-                                       number_of_agents,
+    asa = calc_average_speed_of_answer(t_intensity,
+                                       agents,
                                        wait_probability,
                                        aht)
-    service_level = calc_service_level(traffic_intensity,
-                                       number_of_agents,
+    service_level = calc_service_level(t_intensity,
+                                       agents,
                                        wait_probability,
                                        target_answer_time,
                                        aht)
-    occupancy = calc_occupancy(traffic_intensity, number_of_agents)
-    agents_with_shrinkage = add_shrinkage(number_of_agents, shrinkage)
+    occupancy = calc_occupancy(t_intensity, agents)
+    agents_with_shrinkage = add_shrinkage(agents, shrinkage)
 
     return StaffingData(
-        traffic_intensity=traffic_intensity,
+        traffic_intensity=t_intensity,
         wait_probability=wait_probability,
         immediate_answer=immediate_answer,
         average_speed_of_answer=asa,
         service_level=service_level,
         occupancy=occupancy,
-        agents=number_of_agents,
+        agents=agents,
         agents_with_shrinkage=agents_with_shrinkage
     )
 
@@ -372,7 +344,7 @@ def __calc_all(
 def calc_staffing(
         calls_per_hour: float,
         aht: float,
-        number_of_agents: Optional[int] = None,
+        agents: Optional[int] = None,
         target_occupancy: Optional[float] = None,
         target_answer_time: float = 20,
         target_service_level: float = 0.80,
@@ -391,7 +363,7 @@ def calc_staffing(
         Number of calls offered per hour.
     aht : float
         Average Handling Time. Default unit is seconds.
-    number_of_agents : int, optional.
+    agents : int, optional.
         Number of agents. If not specified
     target_occupancy : float, optional
         If specified - algorithm may increase required number of agents to achieve lower occupancy.

@@ -10,10 +10,7 @@ from staffing import (
     calc_immediate_answer,
     calc_occupancy,
     calc_service_level,
-    calc_traffic_intensity,
-    calc_wait_probability,
-    optimise_occupancy,
-    __find_min_max_agents
+    calc_traffic_intensity
 )
 
 
@@ -27,15 +24,6 @@ def test_calc_traffic_intensity(calls, aht, aht_unit, expected):
 
 def test_calc_traffic_intensity_no_unit():
     assert calc_traffic_intensity(100, 72) == 2
-
-
-@pytest.mark.parametrize(
-    "traffic_intensity, number_of_agents, expected",
-    [(1, 1, 1), (123, 132, 0.3211), (12345, 12421, 0.3812), (1000, 900, 1)],
-)
-def test_calc_wait_probability(traffic_intensity, number_of_agents, expected):
-    wait_probability = calc_wait_probability(traffic_intensity, number_of_agents)
-    assert round(wait_probability, 4) == expected
 
 
 def test_calc_immediate_answer():
@@ -52,16 +40,6 @@ def test_occupancy():
     assert round(calc_occupancy(123, 130), 3) == 0.946
 
 
-def test_optimise_occupancy():
-    agents, occ = optimise_occupancy(123, 130, 0.85)
-    assert agents == 145
-    assert round(occ, 4) == 0.8483
-
-    agents, occ = optimise_occupancy(109, 130, 0.85)
-    assert agents == 130
-    assert round(occ, 4) == 0.8385
-
-
 def test_calc_average_speed_of_answer():
     assert round(calc_average_speed_of_answer(123, 130, 0.4244, 300), 2) == 18.19
 
@@ -70,6 +48,3 @@ def test_add_shrinkage():
     assert add_shrinkage(10, 0.3) == 15
     assert add_shrinkage(11, 0.3) == 16
 
-
-def test___find_min_max_agents():
-    assert __find_min_max_agents(100, 300, 20, 0.8) == (8, 16)

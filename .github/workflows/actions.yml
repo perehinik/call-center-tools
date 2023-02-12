@@ -26,13 +26,18 @@ jobs:
 
     - name: Static tests
       run: |
-        echo $(ls)
         cd ./python
         flake8 . --statistics
         pylint . --recursive=y
         black --check .
         isort --check .
 
-    - name: Unit/integreation tests
+    - name: Unit tests
       run: |
-        pytest
+        cd ./python
+        pytest ./tests/unit
+
+    - name: Integreation tests
+      run: |
+        cd ./python
+        pytest ./tests/integration
