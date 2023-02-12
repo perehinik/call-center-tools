@@ -6,11 +6,12 @@ import pytest
 from staffing import (
     TimeUnit,
     add_shrinkage,
+    agents_to_meet_occupancy,
     calc_average_speed_of_answer,
     calc_immediate_answer,
     calc_occupancy,
     calc_service_level,
-    calc_traffic_intensity
+    calc_traffic_intensity,
 )
 
 
@@ -40,6 +41,11 @@ def test_occupancy():
     assert round(calc_occupancy(123, 130), 3) == 0.946
 
 
+def test_agents_to_meet_occupancy():
+    assert agents_to_meet_occupancy(123, 0.85) == 145
+    assert agents_to_meet_occupancy(110, 0.85) == 130
+
+
 def test_calc_average_speed_of_answer():
     assert round(calc_average_speed_of_answer(123, 130, 0.4244, 300), 2) == 18.19
 
@@ -47,4 +53,3 @@ def test_calc_average_speed_of_answer():
 def test_add_shrinkage():
     assert add_shrinkage(10, 0.3) == 15
     assert add_shrinkage(11, 0.3) == 16
-
