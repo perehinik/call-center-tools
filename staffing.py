@@ -340,7 +340,7 @@ def __calc_all(
         t_intensity, agents, wait_probability, target_answer_time, aht
     )
     occupancy = calc_occupancy(t_intensity, agents)
-    agents_with_shrinkage = add_shrinkage(agents, shrinkage)
+    agents_with_shrinkage = add_shrinkage(agents, shrinkage) if shrinkage else None
 
     return StaffingData(
         traffic_intensity=t_intensity,
