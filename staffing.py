@@ -30,6 +30,11 @@ class TimeUnit(Enum):
 
 @dataclass
 class StaffingData:
+    """
+    Container for calculated results.
+    """
+
+    # pylint: disable=too-many-instance-attributes
     traffic_intensity: float
     wait_probability: float
     immediate_answer: float
@@ -403,3 +408,4 @@ def calc_staffing(
         result = __calc_all(agents, t_intensity, aht, target_answer_time, shrinkage)
         if result.service_level >= target_service_level:
             return result
+    raise OverflowError(f"Staffing Error: reached maximum number of agents {agents}")

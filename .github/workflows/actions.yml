@@ -8,7 +8,7 @@ on:
 
 jobs:
   tests:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     
     steps:
     - uses: actions/checkout@v3
@@ -19,14 +19,12 @@ jobs:
 
     - name: Install dependencies
       run: |
-        cd ./python
         python -m pip install --upgrade pip
         pip install -r requirements_dev.txt
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
     - name: Static tests
       run: |
-        cd ./python
         flake8 . --statistics
         pylint . --recursive=y
         black --check .
@@ -34,10 +32,8 @@ jobs:
 
     - name: Unit tests
       run: |
-        cd ./python
         pytest ./tests/unit
 
-    - name: Integreation tests
+    - name: Integration tests
       run: |
-        cd ./python
         pytest ./tests/integration
