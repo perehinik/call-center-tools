@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Optional, Tuple
 
-from erlang import erlang_c
+from . import erlang_c
 
 
 class TimeUnit(Enum):

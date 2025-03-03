@@ -3,7 +3,7 @@ Integration tests for staffing.py module.
 """
 
 
-from staffing import __find_min_max_agents, calc_staffing
+from src.staffing import __find_min_max_agents, calc_staffing
 
 
 def test___find_min_max_agents():

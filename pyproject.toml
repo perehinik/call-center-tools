@@ -8,8 +8,32 @@ line-length = 100
 [tool.pylint]
 fail-under=9.5
 [tool.pylint.'MASTER']
+init-hook='import sys; sys.path.append("./src")'
 ignore=['venv', 'tests']
 [tool.pylint.'FORMAT']
 max-line-length=['100']
 [tool.pylint."MESSAGES CONTROL"]
 disable = ["W0236", "R0913"]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "call-center-tools"
+version = "1.0.0"
+authors = [
+  { name="Ivan Perehiniak", email="iv.perehinik@gmail.com" },
+]
+description = "Tools for call center staffing calculations"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "License :: OSI Approved :: MIT License",
+]
+
+[project.urls]
+Homepage = "https://github.com/perehinik/call-center-tools"
+Issues = "https://github.com/perehinik/call-center-tools/issues"

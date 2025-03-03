@@ -4,3 +4,4 @@ pylint~=2.16.1
 black~=23.1.0
 isort~=5.12.0
 setuptools
+build

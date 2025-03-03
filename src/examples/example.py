@@ -2,7 +2,7 @@
 Exemple of calculating call center staffing
 """
 
-from staffing import calc_staffing
+from call_center_tools import calc_staffing
 
 CALLS_PER_HOUR = 1000
 AVERAGE_HANDLING_TIME = 120  # sec
