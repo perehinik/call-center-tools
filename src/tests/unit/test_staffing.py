@@ -3,7 +3,7 @@ Unit tests for staffing.py module.
 """
 import pytest
 
-from staffing import (
+from src.staffing import (
     TimeUnit,
     add_shrinkage,
     agents_to_meet_occupancy,

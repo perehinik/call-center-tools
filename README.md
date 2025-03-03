@@ -2,11 +2,17 @@
 
 Package contains essential tools for call center staffing calculations.
 
+Package installation:
+```shell
+pip install call_center_tools
+```
+
 Let's try to calculate number of agents for call center with average of 1000 calls per hour.
 Average duration of call is 120 sec. Agents should be occupied max 85% of time. 
 80% of calls should be answered in 20 sec.
+
 ```python
-from staffing import calc_staffing
+from call_center_tools import calc_staffing
 
 result = calc_staffing(
     calls_per_hour=1000,
@@ -40,8 +46,9 @@ Outputs:
 So recommended number of agents for such call center is `40`, not counting shrinkage.
 
 Let's imagine we have only `35` agents, not recommended `40`:
+
 ```python
-from staffing import calc_staffing
+from call_center_tools import calc_staffing
 
 result = calc_staffing(
     calls_per_hour=1000,
@@ -74,4 +81,9 @@ Outputs:
   Agents + shrinkage:       50
 ```
 
-Try to use `./example.py` to test your own parameters.
+Try to use `example.py` to test your own parameters.
+
+You can also find method for Erlang C and Erlang B calculations:
+```python
+from call_center_tools import erlang_c, erlang_b
+```

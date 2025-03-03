@@ -4,7 +4,7 @@ Unit tests for erlang.py module.
 
 import pytest
 
-from erlang import erlang_b, erlang_c
+from src.erlang import erlang_b, erlang_c
 
 
 def test_erlang_b():
